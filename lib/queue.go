@@ -448,6 +448,11 @@ func (q *RequestQueue) doRequest(ctx context.Context, item *QueueItem, ch *Queue
 		if bucketHash == "" {
 			// We might have hit a Cloudflare 429, so we create a special bucket for that
 			bucketHash = "route:" + pathHash
+			// These 429s have no ratelimit headers, which would leave a bucket with a limit of 0 that
+			// blocks every request on the route until it gets swept. Wait out retry-after instead
+			limit = 1
+			remaining = 0
+			resetAt = float64(time.Now().UnixMilli())/1_000 + resetAfter
 		} else {
 			bucketHash = bucketHash + ":" + topBucketHash + ":" + scope
 		}
