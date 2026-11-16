@@ -288,7 +288,8 @@ func (m *QueueManager) GetRequestRoutingInfo(req *http.Request, token string) (r
 		routingHash = HashCRC64(token)
 	} else {
 		queueType = Bot
-		routingHash = HashCRC64(path)
+		// Discord ratelimits per method, so e.g. POST /guilds/:id/channels must not wait on the GET bucket
+		routingHash = HashCRC64(req.Method + path)
 	}
 	return
 }
